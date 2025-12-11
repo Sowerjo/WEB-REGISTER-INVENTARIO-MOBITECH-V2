@@ -29,11 +29,26 @@ CREATE TABLE IF NOT EXISTS public.users (
   setor text NOT NULL,
   email text NOT NULL,
   senha text NOT NULL,
+  user_admin smallint NOT NULL DEFAULT 0 CONSTRAINT chk_users_user_admin CHECK (user_admin IN (0,1)),
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE (email),
   FOREIGN KEY (setor) REFERENCES public.sectors (nome) ON UPDATE CASCADE ON DELETE RESTRICT
 );
+
+ALTER TABLE public.users
+  ADD COLUMN IF NOT EXISTS user_admin smallint NOT NULL DEFAULT 0;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'chk_users_user_admin'
+      AND conrelid = 'public.users'::regclass
+  ) THEN
+    ALTER TABLE public.users
+      ADD CONSTRAINT chk_users_user_admin CHECK (user_admin IN (0,1));
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS public.admin_users (
   admin_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

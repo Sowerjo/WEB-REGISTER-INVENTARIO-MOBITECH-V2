@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useUserStore } from '../stores/userStore'
 import { useSectorStore } from '../stores/sectorStore'
-import { X, User, Mail, Building2, Lock } from 'lucide-react'
+import { X, User, Mail, Building2, Lock, Shield } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface UserFormModalProps {
@@ -15,7 +15,8 @@ export default function UserFormModal({ user, onClose, onSuccess }: UserFormModa
     nome: '',
     email: '',
     senha: '',
-    setor: ''
+    setor: '',
+    user_admin: 0 as 0 | 1
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -28,8 +29,9 @@ export default function UserFormModal({ user, onClose, onSuccess }: UserFormModa
       setFormData({
         nome: user.nome,
         email: user.email,
-        senha: '', // Don't pre-fill password for security
-        setor: user.setor
+        senha: '',
+        setor: user.setor,
+        user_admin: (user.user_admin ?? 0) as 0 | 1
       })
     }
   }, [])
@@ -46,6 +48,7 @@ export default function UserFormModal({ user, onClose, onSuccess }: UserFormModa
           nome: formData.nome,
           email: formData.email,
           setor: formData.setor,
+          user_admin: formData.user_admin,
           updated_at: new Date().toISOString()
         }
         
@@ -151,6 +154,19 @@ export default function UserFormModal({ user, onClose, onSuccess }: UserFormModa
                     {sector.nome}
                   </option>
                 ))}
+              </select>
+            </div>
+
+            <div className="relative">
+              <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <select
+                value={formData.user_admin}
+                onChange={(e) => setFormData({ ...formData, user_admin: Number(e.target.value) as 0 | 1 })}
+                className="w-full pl-10 pr-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                <option value={0}>Usuário padrão (sem admin)</option>
+                <option value={1}>Administrador</option>
               </select>
             </div>
 

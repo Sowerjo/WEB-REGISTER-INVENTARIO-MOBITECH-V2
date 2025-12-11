@@ -7,6 +7,7 @@ interface User {
   setor: string
   email: string
   senha: string
+  user_admin: number
   created_at: string
   updated_at: string
 }
@@ -112,6 +113,7 @@ export const useUserStore = create<UserState>((set) => ({
         setor: '',
         email: '',
         senha: '',
+        user_admin: 0,
         created_at: '',
         updated_at: ''
       })) : []
@@ -122,7 +124,7 @@ export const useUserStore = create<UserState>((set) => ({
 
       const { data, error } = await supabase
         .from('users')
-        .insert([{
+        .insert([{ 
           ...userData,
           user_id: nextUserId,
           created_at: new Date().toISOString(),
