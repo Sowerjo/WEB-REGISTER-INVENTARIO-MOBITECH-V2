@@ -1,26 +1,22 @@
 import { useState, useEffect } from 'react'
 import { useAuthStore } from '../stores/authStore'
-import { Lock, User, Eye, EyeOff, Wifi, WifiOff, AlertCircle, Server } from 'lucide-react'
+import { Lock, User, Eye, EyeOff, AlertCircle, Server, Wifi, WifiOff } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function AdminLogin() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const { login, isLoading, error: authError, supabaseConnected, checkSupabaseConnection } = useAuthStore()
+  const { login, isLoading, error: authError, serverConnected, checkServerConnection } = useAuthStore()
 
   useEffect(() => {
-    console.log('AdminLogin component mounted')
-    console.log('Initial connection status:', supabaseConnected)
-    checkSupabaseConnection().then(() => {
-      console.log('Connection check completed. Status:', supabaseConnected)
-    })
-  }, [])
+    checkServerConnection()
+  }, [checkServerConnection])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!supabaseConnected) {
+    if (!serverConnected) {
       toast.error('Não é possível fazer login sem conexão com o servidor')
       return
     }
@@ -56,11 +52,11 @@ export default function AdminLogin() {
           {/* Connection Status */}
           <div className="px-6 pt-4">
             <div className={`flex items-center justify-center space-x-2 text-xs px-3 py-2 rounded-full ${
-              supabaseConnected 
+              serverConnected 
                 ? 'bg-green-500/20 text-green-300 border border-green-500/30' 
                 : 'bg-red-500/20 text-red-300 border border-red-500/30'
             }`}>
-              {supabaseConnected ? (
+              {serverConnected ? (
                 <>
                   <Wifi className="w-3 h-3" />
                   <span>Conectado ao servidor</span>
@@ -74,24 +70,6 @@ export default function AdminLogin() {
             </div>
           </div>
 
-          {!supabaseConnected && (
-            <div className="px-6 pt-2">
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                <div className="flex items-start space-x-2">
-                  <AlertCircle className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" />
-                  <div className="text-xs text-red-300">
-                    <p className="font-medium mb-1">Conexão com Supabase não estabelecida</p>
-                    <p className="text-red-400">Verifique:</p>
-                    <ul className="list-disc list-inside text-red-400 mt-1 space-y-0.5">
-                      <li>Suas credenciais do Supabase</li>
-                      <li>Configurações de rede e CORS</li>
-                      <li>Status do projeto no dashboard do Supabase</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
@@ -104,7 +82,7 @@ export default function AdminLogin() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-500"
-                  disabled={isLoading || !supabaseConnected}
+                  disabled={isLoading || !serverConnected}
                   required
                 />
               </div>
@@ -117,14 +95,14 @@ export default function AdminLogin() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-10 pr-12 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-500"
-                  disabled={isLoading || !supabaseConnected}
+                  disabled={isLoading || !serverConnected}
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-200 transition-colors p-1"
-                  disabled={isLoading || !supabaseConnected}
+                  disabled={isLoading || !serverConnected}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -133,7 +111,7 @@ export default function AdminLogin() {
 
             <button
               type="submit"
-              disabled={isLoading || !supabaseConnected}
+              disabled={isLoading || !serverConnected}
               className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-600 disabled:to-gray-600 transition-all transform hover:scale-105 active:scale-95"
             >
               {isLoading ? (
@@ -162,14 +140,7 @@ export default function AdminLogin() {
             </div>
           )}
 
-          {/* Debug Info */}
-          <div className="px-6 pb-4">
-            <div className="text-xs text-gray-500 text-center">
-              <p>Debug: Status da conexão: {supabaseConnected ? 'Conectado' : 'Desconectado'}</p>
-              {authError && <p className="text-red-400">Erro: {authError}</p>}
-              <p>Verifique o console do navegador para mais detalhes</p>
-            </div>
-          </div>
+          
         </div>
 
         {/* Decorative elements */}

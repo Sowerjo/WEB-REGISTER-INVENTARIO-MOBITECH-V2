@@ -40,6 +40,9 @@ if not exist "site\.htaccess" (
     echo Header set X-Frame-Options "SAMEORIGIN"
     echo Header set X-XSS-Protection "1; mode=block"
     echo Header set X-Content-Type-Options "nosniff"
+    echo ^<FilesMatch "^\\.env"^>
+    echo   Require all denied
+    echo ^</FilesMatch^>
     echo ^<FilesMatch "\.(js^|css^|png^|jpg^|jpeg^|gif^|ico^|svg^|woff^|woff2^|ttf^|eot)$"^>
     echo   Header set Cache-Control "max-age=31536000, public"
     echo ^</FilesMatch^>

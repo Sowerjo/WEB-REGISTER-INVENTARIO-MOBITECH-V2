@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
+import { useSectorStore } from '../stores/sectorStore'
 import { X, Building2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface SectorFormModalProps {
-  sector?: any
+  sector?: {
+    sector_id: string
+    nome: string
+    descricao: string | null
+  }
   onClose: () => void
   onSuccess: () => void
 }
@@ -15,6 +19,7 @@ export default function SectorFormModal({ sector, onClose, onSuccess }: SectorFo
     descricao: ''
   })
   const [isLoading, setIsLoading] = useState(false)
+  const { createSector, updateSector } = useSectorStore()
 
   useEffect(() => {
     if (sector) {
@@ -23,7 +28,7 @@ export default function SectorFormModal({ sector, onClose, onSuccess }: SectorFo
         descricao: sector.descricao || ''
       })
     }
-  }, [])
+  }, [sector])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -31,37 +36,18 @@ export default function SectorFormModal({ sector, onClose, onSuccess }: SectorFo
 
     try {
       if (sector) {
-        // Update existing sector
-        const { error } = await supabase
-          .from('sectors')
-          .update({
-            nome: formData.nome,
-            descricao: formData.descricao,
-            updated_at: new Date().toISOString()
-          })
-          .eq('sector_id', sector.sector_id)
-
-        if (error) throw error
+        const success = await updateSector(sector.sector_id, formData.nome, formData.descricao || undefined)
+        if (!success) throw new Error('Erro ao atualizar setor')
         toast.success('Setor atualizado com sucesso!')
       } else {
-        // Create new sector
-        const { error } = await supabase
-          .from('sectors')
-          .insert([{
-            nome: formData.nome,
-            descricao: formData.descricao,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }])
-
-        if (error) throw error
+        const success = await createSector(formData.nome, formData.descricao || undefined)
+        if (!success) throw new Error('Erro ao criar setor')
         toast.success('Setor criado com sucesso!')
       }
 
       onSuccess()
-    } catch (error) {
+    } catch {
       toast.error('Erro ao salvar setor')
-      console.error('Error saving sector:', error)
     } finally {
       setIsLoading(false)
     }

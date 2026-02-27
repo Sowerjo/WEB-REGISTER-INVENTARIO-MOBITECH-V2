@@ -33,12 +33,10 @@ export const useSectorStore = create<SectorState>((set) => ({
         .from('sectors')
         .select('*')
         .eq('is_active', true)
-        .order('nome')
-
+        .order('nome', { ascending: true })
       if (error) throw error
-
       set({ sectors: data || [], isLoading: false })
-    } catch (error) {
+    } catch {
       set({ error: 'Erro ao carregar setores', isLoading: false })
     }
   },
@@ -47,20 +45,19 @@ export const useSectorStore = create<SectorState>((set) => ({
     set({ isLoading: true, error: null })
     
     try {
+      const payload = { nome, descricao: descricao ?? null, is_active: true }
       const { data, error } = await supabase
         .from('sectors')
-        .insert([{ nome, descricao }])
-        .select()
+        .insert(payload)
+        .select('*')
         .single()
-
       if (error) throw error
-
       set((state) => ({ 
-        sectors: [...state.sectors, data], 
+        sectors: [...state.sectors, data as Sector], 
         isLoading: false 
       }))
       return true
-    } catch (error) {
+    } catch {
       set({ error: 'Erro ao criar setor', isLoading: false })
       return false
     }
@@ -72,21 +69,19 @@ export const useSectorStore = create<SectorState>((set) => ({
     try {
       const { data, error } = await supabase
         .from('sectors')
-        .update({ nome, descricao, updated_at: new Date().toISOString() })
+        .update({ nome, descricao: descricao ?? null })
         .eq('sector_id', sector_id)
-        .select()
+        .select('*')
         .single()
-
       if (error) throw error
-
       set((state) => ({
-        sectors: state.sectors.map(sector => 
-          sector.sector_id === sector_id ? data : sector
+        sectors: state.sectors.map(sector =>
+          sector.sector_id === sector_id ? (data as Sector) : sector
         ),
         isLoading: false
       }))
       return true
-    } catch (error) {
+    } catch {
       set({ error: 'Erro ao atualizar setor', isLoading: false })
       return false
     }
@@ -98,17 +93,15 @@ export const useSectorStore = create<SectorState>((set) => ({
     try {
       const { error } = await supabase
         .from('sectors')
-        .update({ is_active: false, updated_at: new Date().toISOString() })
+        .update({ is_active: false })
         .eq('sector_id', sector_id)
-
       if (error) throw error
-
       set((state) => ({
         sectors: state.sectors.filter(sector => sector.sector_id !== sector_id),
         isLoading: false
       }))
       return true
-    } catch (error) {
+    } catch {
       set({ error: 'Erro ao deletar setor', isLoading: false })
       return false
     }

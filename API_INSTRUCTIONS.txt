@@ -1,0 +1,81 @@
+Guia de Integração — Supabase (sem PHP)
+
+Visão Geral
+- Este projeto agora se comunica diretamente com o Supabase usando @supabase/supabase-js.
+- Não há mais endpoints PHP locais em /api; toda a leitura/escrita é feita nas tabelas do Supabase.
+- Tabelas: public.sectors, public.users, public.admin_users.
+- Formato de dados: JSON, mesma modelagem anterior (inclusive user_id sequencial USR000x).
+
+Autenticação
+- Frontend usa a chave ANON do Supabase.
+- Variáveis necessárias no .env:
+  - VITE_SUPABASE_URL: URL do seu projeto Supabase
+  - VITE_SUPABASE_ANON_KEY: chave anon do seu projeto
+- RLS: políticas permissivas já previstas na migration (CRUD para anon/authenticated). Ajuste conforme sua necessidade de segurança.
+
+Configuração (Frontend)
+- Cliente Supabase em src/lib/supabase.ts:
+  - import { createClient } from '@supabase/supabase-js'
+  - const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY)
+- Stores já usam supabase diretamente (users, sectors, auth).
+
+Operações por Tabela
+1) Setores (public.sectors)
+- Listar ativos:
+  - select('*').eq('is_active', true).order('nome', { ascending: true })
+- Criar:
+  - insert({ nome, descricao: descricao ?? null, is_active: true }).select('*').single()
+- Atualizar:
+  - update({ nome, descricao }).eq('sector_id', id).select('*').single()
+- Soft delete:
+  - update({ is_active: false }).eq('sector_id', id)
+
+2) Usuários (public.users)
+- Listar:
+  - select('*').order('nome', { ascending: true })
+- Criar com user_id sequencial:
+  - buscar último user_id LIKE 'USR%' ordenado desc, extrair número e incrementar
+  - insert({ user_id: 'USR000x', nome, setor, email, senha, user_admin }).select('*').single()
+- Atualizar parcial:
+  - update({ campos }).eq('user_id', id).select('*').single()
+- Excluir:
+  - delete().eq('user_id', id)
+
+3) Admins (public.admin_users)
+- Buscar por username:
+  - select('*').eq('username', username).limit(1)
+- Atualizar last_login:
+  - update({ last_login: new Date().toISOString() }).eq('admin_id', id)
+
+Exemplos com JavaScript
+- Listar setores:
+  const { data, error } = await supabase.from('sectors').select('*').eq('is_active', true).order('nome', { ascending: true })
+- Criar usuário:
+  const { data: last } = await supabase.from('users').select('user_id').like('user_id', 'USR%').order('user_id', { ascending: false }).limit(1)
+  const next = last && last[0]?.user_id?.startsWith('USR') ? (parseInt(last[0].user_id.slice(3), 10) + 1) : 1
+  const user_id = 'USR' + String(next).padStart(4, '0')
+  const { data, error } = await supabase.from('users').insert({ user_id, nome, setor, email, senha, user_admin }).select('*').single()
+
+Erros e Status
+- error do Supabase contém message, details e hint. Sempre trate error antes de usar data.
+- Violação de UNIQUE (email/nome) retorna erro; capture e exiba mensagem amigável.
+
+Health Check
+- Faça um select mínimo (ex.: from('sectors').select('sector_id').limit(1)) e verifique se não há error.
+
+Boas Práticas
+- Não exponha a service key no frontend; use apenas a anon key.
+- Se precisar restringir acesso, ajuste as RLS para permitir apenas operações necessárias.
+- Valide inputs no frontend (email válido, senha mínima, campos obrigatórios).
+- Mantenha o fluxo de geração de user_id sequencial no cliente ou mova para função SQL se preferir atomicidade.
+
+Modelo de Dados (Resumo)
+- sectors: sector_id(UUID), nome(UNIQUE), descricao, is_active(boolean), created_at, updated_at
+- users: user_id(USR0001...), nome, setor(FK para sectors.nome), email(UNIQUE), senha, user_admin(0/1), timestamps
+- admin_users: admin_id(UUID), username(UNIQUE), email(UNIQUE), full_name, is_active, last_login, timestamps
+
+Checklist de Integração
+- Configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no .env.
+- Use supabase.from('<tabela>') para CRUD conforme exemplos.
+- Trate error em cada operação.
+- Se necessário, ajuste RLS no Supabase para reforçar segurança.

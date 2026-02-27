@@ -5,7 +5,14 @@ import { X, User, Mail, Building2, Lock, Shield } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface UserFormModalProps {
-  user?: any
+  user?: {
+    user_id: string
+    nome: string
+    email: string
+    senha?: string
+    setor: string
+    user_admin?: boolean
+  }
   onClose: () => void
   onSuccess: () => void
 }
@@ -16,7 +23,7 @@ export default function UserFormModal({ user, onClose, onSuccess }: UserFormModa
     email: '',
     senha: '',
     setor: '',
-    user_admin: 0 as 0 | 1
+    user_admin: false as boolean
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -31,10 +38,10 @@ export default function UserFormModal({ user, onClose, onSuccess }: UserFormModa
         email: user.email,
         senha: '',
         setor: user.setor,
-        user_admin: (user.user_admin ?? 0) as 0 | 1
+        user_admin: Boolean(user.user_admin ?? false)
       })
     }
-  }, [])
+  }, [fetchSectors, user])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -44,7 +51,14 @@ export default function UserFormModal({ user, onClose, onSuccess }: UserFormModa
     try {
       if (user) {
         // Update existing user
-        const updateData: any = {
+        const updateData: Partial<{
+          nome: string
+          email: string
+          setor: string
+          user_admin: boolean
+          updated_at: string
+          senha: string
+        }> = {
           nome: formData.nome,
           email: formData.email,
           setor: formData.setor,
@@ -76,11 +90,11 @@ export default function UserFormModal({ user, onClose, onSuccess }: UserFormModa
       }
 
       onSuccess()
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao salvar usuário'
+    } catch (_error) {
+      const errorMessage = _error instanceof Error ? _error.message : 'Erro ao salvar usuário'
       setError(errorMessage)
       toast.error(errorMessage)
-      console.error('Error saving user:', error)
+      console.error('Error saving user:', _error)
     } finally {
       setIsLoading(false)
     }
@@ -160,13 +174,13 @@ export default function UserFormModal({ user, onClose, onSuccess }: UserFormModa
             <div className="relative">
               <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <select
-                value={formData.user_admin}
-                onChange={(e) => setFormData({ ...formData, user_admin: Number(e.target.value) as 0 | 1 })}
+                value={String(formData.user_admin)}
+                onChange={(e) => setFormData({ ...formData, user_admin: e.target.value === 'true' })}
                 className="w-full pl-10 pr-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               >
-                <option value={0}>Usuário padrão (sem admin)</option>
-                <option value={1}>Administrador</option>
+                <option value="false">Usuário padrão (sem admin)</option>
+                <option value="true">Administrador</option>
               </select>
             </div>
 

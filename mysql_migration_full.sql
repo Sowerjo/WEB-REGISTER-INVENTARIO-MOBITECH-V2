@@ -1,0 +1,68 @@
+START TRANSACTION;
+
+CREATE TABLE IF NOT EXISTS sectors (
+  sector_id CHAR(36) NOT NULL,
+  nome VARCHAR(255) NOT NULL,
+  descricao TEXT NULL,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (sector_id),
+  UNIQUE KEY uq_sectors_nome (nome)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS users (
+  user_id VARCHAR(20) NOT NULL,
+  nome VARCHAR(255) NOT NULL,
+  setor VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  senha VARCHAR(255) NOT NULL,
+  user_admin TINYINT(1) NOT NULL DEFAULT 0,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id),
+  UNIQUE KEY uq_users_email (email),
+  CONSTRAINT fk_users_setor FOREIGN KEY (setor) REFERENCES sectors (nome) ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS admin_users (
+  admin_id CHAR(36) NOT NULL,
+  username VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  full_name VARCHAR(255) NOT NULL,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  last_login DATETIME NULL,
+  PRIMARY KEY (admin_id),
+  UNIQUE KEY uq_admin_users_username (username),
+  UNIQUE KEY uq_admin_users_email (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DELIMITER $$
+CREATE TRIGGER before_insert_sectors
+BEFORE INSERT ON sectors
+FOR EACH ROW
+BEGIN
+  IF NEW.sector_id IS NULL OR NEW.sector_id = '' THEN
+    SET NEW.sector_id = UUID();
+  END IF;
+END$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE TRIGGER before_insert_admin_users
+BEFORE INSERT ON admin_users
+FOR EACH ROW
+BEGIN
+  IF NEW.admin_id IS NULL OR NEW.admin_id = '' THEN
+    SET NEW.admin_id = UUID();
+  END IF;
+END$$
+DELIMITER ;
+
+INSERT INTO admin_users (admin_id, username, email, full_name, is_active)
+VALUES (UUID(), 'admin', 'admin@example.com', 'Administrador', 1)
+ON DUPLICATE KEY UPDATE username = username;
+
+COMMIT;

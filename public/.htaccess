@@ -10,6 +10,11 @@ Header set X-Frame-Options "SAMEORIGIN"
 Header set X-XSS-Protection "1; mode=block"
 Header set X-Content-Type-Options "nosniff"
 
+# Protect environment files
+<FilesMatch "^\\.env">
+  Require all denied
+</FilesMatch>
+
 # Cache static assets
 <FilesMatch "\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$">
   Header set Cache-Control "max-age=31536000, public"

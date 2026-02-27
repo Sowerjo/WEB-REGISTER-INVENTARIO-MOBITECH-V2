@@ -3,6 +3,7 @@ import { Toaster } from 'sonner'
 import { useAuthStore } from './stores/authStore'
 import AdminLogin from "./pages/AdminLogin"
 import AdminDashboard from "./pages/AdminDashboard"
+import StockPage from "./pages/StockPage"
 
 function App() {
   const { isAuthenticated } = useAuthStore()
@@ -18,6 +19,10 @@ function App() {
           <Route 
             path="/dashboard" 
             element={isAuthenticated ? <AdminDashboard /> : <Navigate to="/" />} 
+          />
+          <Route 
+            path="/estoque" 
+            element={isAuthenticated ? <StockPage /> : <Navigate to="/" />} 
           />
         </Routes>
       </Router>

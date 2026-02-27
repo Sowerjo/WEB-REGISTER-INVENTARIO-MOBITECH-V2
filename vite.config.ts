@@ -25,6 +25,6 @@ export default defineConfig({
       autoTheme: true,
       autoThemeTarget: '#root'
     }), 
-    tsconfigPaths()
+    tsconfigPaths(),
   ],
 })

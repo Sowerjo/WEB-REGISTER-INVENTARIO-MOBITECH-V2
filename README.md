@@ -43,19 +43,25 @@ Um sistema web moderno e robusto para gerenciamento de usuários com autenticaç
 - **Notificações**: Sonner (Toast)
 - **Ícones**: Lucide React
 
-## ⚙️ Configuração do Supabase
+## ⚙️ Configuração da API e Supabase
 
-- Arquivo de configuração: `src/lib/supabase.ts`
-- Variáveis de ambiente: `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`
-- Arquivo de exemplo: `.env.example`
-- Crie um arquivo `.env` na raiz com:
+- Backend PHP lê variáveis do `.env` em produção (copiado para `dist/.env`):
+  - `SUPABASE_URL` — URL do seu projeto Supabase
+  - `SUPABASE_ANON_KEY` — chave anon (ou service, se necessário)
+  - `API_KEY` — chave usada pela API para autenticação via header `X-API-Key`
+- Frontend (Vite) lê durante o build:
+  - `VITE_API_BASE_URL` — base da API (ex.: `https://seu-dominio.com/api`)
+  - `VITE_API_KEY` — mesma chave de `API_KEY` (embutida no bundle)
+- Exemplo `.env`:
 
 ```bash
-VITE_SUPABASE_URL=https://SEU-PROJETO.supabase.co
-VITE_SUPABASE_ANON_KEY=SEU_ANON_KEY
-```
+SUPABASE_URL=https://SEU-PROJETO.supabase.co
+SUPABASE_ANON_KEY=SEU_ANON_KEY
+API_KEY=SUA_CHAVE_DA_API
 
-O Vite carrega essas variáveis automaticamente e o cliente é inicializado em `src/lib/supabase.ts`.
+VITE_API_BASE_URL=https://seu-dominio.com/api
+VITE_API_KEY=SUA_CHAVE_DA_API
+```
 
 ## 📁 Estrutura do Projeto
 
@@ -65,7 +71,7 @@ src/
 │   ├── UserFormModal.tsx    # Modal de formulário de usuário
 │   └── SectorFormModal.tsx  # Modal de formulário de setor
 ├── lib/                 # Configurações e utilitários
-│   └── supabase.ts          # Cliente Supabase
+│   └── supabase.ts          # Cliente Supabase (frontend direto)
 ├── pages/               # Páginas principais
 │   ├── AdminLogin.tsx       # Página de login
 │   └── AdminDashboard.tsx   # Dashboard administrativo
@@ -203,4 +209,3 @@ Contribuições são bem-vindas! Por favor:
 3. Commit suas mudanças
 4. Push para a branch
 5. Abra um Pull Request
-
